@@ -18,11 +18,11 @@ class BackTester:
     # TODO: Refactor
     def _run_backtest(self, strategy: IStrategy, features: pd.DataFrame) -> pd.DataFrame:
         use_atr = False
-        print("Running backtest with: ", strategy.name(), " Using ATR: ", use_atr)
         if features.empty:
             raise ValueError("No data passed in features DataFrame")
         if "ATR" in features.columns:
             use_atr = True
+        print("Running backtest with: ", strategy.name(), " Using ATR: ", use_atr)
         # Implementation of backtest logic
         features_data = features.copy()
         starting_capital = 10000.00
@@ -69,7 +69,7 @@ class BackTester:
                         df.at[features_data.index[i], 'Position'] = 0
                         df.at[features_data.index[i], 'RealizedPnL'] = realized_pnl
                         df.at[features_data.index[i], 'EntryPrice'] = 0.0
-                        print(i, f"Stop loss hit - Closed long at @ {current_price} with pnl @ {realized_pnl}, ATR: {current_atr:.4f}")
+                        #print(i, f"Stop loss hit - Closed long at @ {current_price} with pnl @ {realized_pnl}, ATR: {current_atr:.4f}")
                     elif position_type == -1:
                         # Close short position at stop
                         realized_pnl = (entry_price - current_price) * position_size
@@ -79,7 +79,7 @@ class BackTester:
                         df.at[features_data.index[i], 'Position'] = 0
                         df.at[features_data.index[i], 'RealizedPnL'] = realized_pnl
                         df.at[features_data.index[i], 'EntryPrice'] = 0.0
-                        print(i, f"Stop loss hit - Closed short at @ {current_price} with pnl @ {realized_pnl}, ATR: {current_atr:.4f}")
+                        #print(i, f"Stop loss hit - Closed short at @ {current_price} with pnl @ {realized_pnl}, ATR: {current_atr:.4f}")
 
             strategy.on_bar(row)
             if strategy.should_buy(row):
@@ -90,7 +90,7 @@ class BackTester:
                     df.at[features_data.index[i], 'Signal'] = 'Open Long'
                     df.at[features_data.index[i], 'Position'] = position_size
                     df.at[features_data.index[i], 'EntryPrice'] = entry_price
-                    print(i, "Opened long at @", fill_price)
+                    #print(i, "Opened long at @", fill_price)
                 elif position_type == -1:
                     # Close short
                     position_type = 0
@@ -100,7 +100,7 @@ class BackTester:
                     df.at[features_data.index[i], 'Position'] = 0
                     df.at[features_data.index[i], 'RealizedPnL'] = realized_pnl
                     df.at[features_data.index[i], 'EntryPrice'] = 0.0
-                    print(i, "Closed short at @", fill_price, "with pnl @", realized_pnl)
+                    #print(i, "Closed short at @", fill_price, "with pnl @", realized_pnl)
                 #print(i, "Current capital: ", current_capital)
 
             if strategy.should_sell(row):
@@ -111,7 +111,7 @@ class BackTester:
                     df.at[features_data.index[i], 'Signal'] = 'Open Short'
                     df.at[features_data.index[i], 'Position'] = -position_size
                     df.at[features_data.index[i], 'EntryPrice'] = entry_price
-                    print(i, "Opened short at @", fill_price)
+                    #print(i, "Opened short at @", fill_price)
                 elif position_type == 1:
                     # Close long
                     position_type = 0
@@ -121,7 +121,7 @@ class BackTester:
                     df.at[features_data.index[i], 'Position'] = 0
                     df.at[features_data.index[i], 'RealizedPnL'] = realized_pnl
                     df.at[features_data.index[i], 'EntryPrice'] = 0.0
-                    print(i, "Closed long at @", fill_price, "with pnl @", realized_pnl)
+                    #print(i, "Closed long at @", fill_price, "with pnl @", realized_pnl)
                 #print(i, "Current capital: ", current_capital)
 
             # Calculate unrealized PnL for current position
