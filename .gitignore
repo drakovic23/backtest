@@ -212,6 +212,7 @@ ENV/
 /site
 
 # End of https://www.gitignore.io/api/macos,linux,django,python,pycharm
+examples/woah.py
 
 *.csv
 # CSV lock files on linux

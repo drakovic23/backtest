@@ -3,20 +3,22 @@ from . import yf_helper
 from .strategy_classes import IStrategy
 from .feature_builder import FeatureBuilder
 
+# TODO: Implement risk profile class and account specifications
 class BackTester:
     def __init__(self):
         self.ohlcv_data = None
     # Returns a DataFrame with strategy details
     def run(self, strategy: IStrategy) -> pd.DataFrame:
-
         builder = FeatureBuilder(self.ohlcv_data)
         features = strategy.prepare_features(builder).build()
+        results = self.__run_backtest(strategy, features)
 
-        results = self._run_backtest(strategy, features)
         return results
 
     # TODO: Refactor
-    def _run_backtest(self, strategy: IStrategy, features: pd.DataFrame) -> pd.DataFrame:
+    # TODO: Currently, when ATR is used only stops seem to trigger
+    # TODO: Also, when ATR is used the signal column is not properly updated
+    def __run_backtest(self, strategy: IStrategy, features: pd.DataFrame) -> pd.DataFrame:
         use_atr = False
         if features.empty:
             raise ValueError("No data passed in features DataFrame")
@@ -138,7 +140,6 @@ class BackTester:
             df.at[features_data.index[i], 'CurrentCapital'] = current_capital + unrealized_pnl
 
         return df
-        pass
 
     def load_data(self, symbol: str, interval: str) -> "BackTester":
         self.ohlcv_data = yf_helper.get_ohlc_data(symbol, interval)
