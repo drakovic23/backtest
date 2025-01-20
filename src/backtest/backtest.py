@@ -56,7 +56,7 @@ class BackTester:
             else:  # Short position
                 pct_change = (current_price - entry_price) / entry_price
                 return pct_change >= current_atr
-
+        # TODO: Fix the issue with the indexing (the last row for strategy details is 0)
         for i in range(len(features_data) - 1):
             row = features_data.iloc[i]
             current_price = features_data['Close'].iloc[i]
@@ -152,6 +152,7 @@ class BackTester:
             df.at[features_data.index[i], 'UnrealizedPnL'] = unrealized_pnl
             df.at[features_data.index[i], 'TotalPnL'] = df.at[features_data.index[i], 'RealizedPnL'] + unrealized_pnl
             df.at[features_data.index[i], 'CurrentCapital'] = current_capital + unrealized_pnl
+        # TODO: Remember to remove this
         df = pd.merge(df, features_data, left_index=True, right_index=True)
         return df
 
