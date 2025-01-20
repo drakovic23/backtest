@@ -16,8 +16,9 @@ class BackTester:
         return results
 
     # TODO: Refactor
-    # TODO: Currently, when ATR is used only stops seem to trigger
-    # TODO: Also, when ATR is used the signal column is not properly updated
+    # TODO: Consider this case:
+    # TODO: We get stopped out on a short, but the strat signal still says short
+    # TODO: Do we open another short?
     def __run_backtest(self, strategy: IStrategy, features: pd.DataFrame) -> pd.DataFrame:
         use_atr = False
         if features.empty:
@@ -33,6 +34,7 @@ class BackTester:
         position_type = 0  # -1 for short/sell, 0 for flat, 1 for buy
         entry_price = 0.0
 
+        features_data.dropna(inplace=True)
         df = pd.DataFrame(index=features.index.copy())
         df['Signal'] = None
         df['RealizedPnL'] = 0.0
@@ -89,7 +91,10 @@ class BackTester:
                     # Open long
                     position_type = 1
                     entry_price = fill_price
-                    df.at[features_data.index[i], 'Signal'] = 'Open Long'
+                    if df.at[features_data.index[i], 'Signal'] is not None:
+                        df.at[features_data.index[i], 'Signal'] += ', Open Long'
+                    else:
+                        df.at[features_data.index[i], 'Signal'] = 'Open Long'
                     df.at[features_data.index[i], 'Position'] = position_size
                     df.at[features_data.index[i], 'EntryPrice'] = entry_price
                     #print(i, "Opened long at @", fill_price)
@@ -98,7 +103,10 @@ class BackTester:
                     position_type = 0
                     realized_pnl = (entry_price - fill_price) * position_size
                     current_capital += realized_pnl
-                    df.at[features_data.index[i], 'Signal'] = 'Close Short'
+                    if df.at[features_data.index[i], 'Signal'] is not None:
+                        df.at[features_data.index[i], 'Signal'] += ', Close Short'
+                    else:
+                        df.at[features_data.index[i], 'Signal'] = 'Close Short'
                     df.at[features_data.index[i], 'Position'] = 0
                     df.at[features_data.index[i], 'RealizedPnL'] = realized_pnl
                     df.at[features_data.index[i], 'EntryPrice'] = 0.0
@@ -110,7 +118,10 @@ class BackTester:
                     # Open short
                     position_type = -1
                     entry_price = fill_price
-                    df.at[features_data.index[i], 'Signal'] = 'Open Short'
+                    if df.at[features_data.index[i], 'Signal'] is not None:
+                        df.at[features_data.index[i], 'Signal'] += ', Open Short'
+                    else:
+                        df.at[features_data.index[i], 'Signal'] = 'Open Short'
                     df.at[features_data.index[i], 'Position'] = -position_size
                     df.at[features_data.index[i], 'EntryPrice'] = entry_price
                     #print(i, "Opened short at @", fill_price)
@@ -119,7 +130,10 @@ class BackTester:
                     position_type = 0
                     realized_pnl = (fill_price - entry_price) * position_size
                     current_capital += realized_pnl
-                    df.at[features_data.index[i], 'Signal'] = 'Close Long'
+                    if df.at[features_data.index[i], 'Signal'] is not None:
+                        df.at[features_data.index[i], 'Signal'] += ', Close Long'
+                    else:
+                        df.at[features_data.index[i], 'Signal'] = 'Close Long'
                     df.at[features_data.index[i], 'Position'] = 0
                     df.at[features_data.index[i], 'RealizedPnL'] = realized_pnl
                     df.at[features_data.index[i], 'EntryPrice'] = 0.0
@@ -138,7 +152,7 @@ class BackTester:
             df.at[features_data.index[i], 'UnrealizedPnL'] = unrealized_pnl
             df.at[features_data.index[i], 'TotalPnL'] = df.at[features_data.index[i], 'RealizedPnL'] + unrealized_pnl
             df.at[features_data.index[i], 'CurrentCapital'] = current_capital + unrealized_pnl
-
+        df = pd.merge(df, features_data, left_index=True, right_index=True)
         return df
 
     def load_data(self, symbol: str, interval: str) -> "BackTester":
