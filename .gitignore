@@ -214,4 +214,8 @@ ENV/
 # End of https://www.gitignore.io/api/macos,linux,django,python,pycharm
 
 *.csv
+# CSV lock files on linux
 *.csv#
+
+# Allow test files
+!tests/*.csv
