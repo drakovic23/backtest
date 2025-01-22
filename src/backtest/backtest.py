@@ -15,10 +15,6 @@ class BackTester:
 
         return results
 
-    # TODO: Refactor
-    # TODO: Consider this case:
-    # TODO: We get stopped out on a short, but the strat signal still says short
-    # TODO: Do we open another short?
     def __run_backtest(self, strategy: IStrategy, features: pd.DataFrame) -> pd.DataFrame:
         use_atr = False
         if features.empty:
@@ -56,11 +52,10 @@ class BackTester:
             else:  # Short position
                 pct_change = (current_price - entry_price) / entry_price
                 return pct_change >= current_atr
-        # TODO: Fix the issue with the indexing (the last row for strategy details is 0)
         for i in range(len(features_data) - 1):
             row = features_data.iloc[i]
             current_price = features_data['Close'].iloc[i]
-            fill_price = features_data['Close'].iloc[i + 1]
+            fill_price = features_data['Open'].iloc[i + 1]
             if use_atr:
                 current_atr = features_data['ATR'].iloc[i]
                 if check_stop_loss(current_price, current_atr):
@@ -155,6 +150,23 @@ class BackTester:
                 # Add the previous TotalPnL to current TotalPnL so we have a rolling total
                 df.at[features_data.index[i], 'TotalRealPnL'] += df.at[features_data.index[i-1], 'TotalRealPnL']
             df.at[features_data.index[i], 'CurrentCapital'] = current_capital + unrealized_pnl
+
+            if df.at[features_data.index[i], 'CurrentCapital'] <= 0: # The account blew up :(
+                break
+
+        # Final mark to market step
+        last_idx = features_data.index[-1]
+        unrealized_pnl = 0.0
+        if position_type != 0:
+            current_price = features_data['Close'].iloc[-1]
+            if position_type == 1:
+                unrealized_pnl = (current_price - entry_price) * position_size
+            elif position_type == -1:
+                unrealized_pnl = (entry_price - current_price) * position_size
+
+        df.at[last_idx, 'UnrealizedPnL'] = unrealized_pnl
+        df.at[last_idx, 'TotalRealPnL'] = df['TotalRealPnL'].iloc[-2]  # carry forward the previous total real PnL
+        df.at[last_idx, 'CurrentCapital'] = current_capital + unrealized_pnl
         # TODO: Remember to remove this
         df = pd.merge(df, features_data, left_index=True, right_index=True)
         return df
