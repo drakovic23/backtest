@@ -7,7 +7,9 @@ class FeatureBuilder:
     """Builder class to construct feature sets for strategies"""
 
     def __init__(self, ohlc_data: pd.DataFrame):
-        # self.base_data = ohlc_data.copy()
+        if "Open" not in ohlc_data.columns or "Close" not in ohlc_data.columns\
+                or ohlc_data.shape[0] < 10:
+            raise ValueError("ohlc_data does not contain sufficient OHLC data")
         self.features = ohlc_data.copy()
 
     def with_pct_change(self) -> "FeatureBuilder":
@@ -15,7 +17,6 @@ class FeatureBuilder:
         return self
 
     def with_rsi(self, window: int) -> "FeatureBuilder":
-        # column_name = f'rsi_{window}'
         calc_rsi_sma(self.features, window)
         return self
 
@@ -23,7 +24,6 @@ class FeatureBuilder:
         return self
 
     def with_atr(self, window: int) -> "FeatureBuilder":
-        # column_name = f'atr_{window}'
         calc_atr_vol(self.features, window)
         return self
 
@@ -48,6 +48,7 @@ def calc_atr_regular(ticker_data: pd.DataFrame) -> None:
 
 # Calculates ATR for a given window
 # Can also be used to calculate the rolling 1D ATR
+# Adds an ATR column to the passed dataframe with the given window
 def calc_atr_vol(ticker_data: pd.DataFrame, window: int) -> None:
     # This is different from the usual TR formula as it focuses on volatility
     df = ticker_data.copy()
@@ -69,6 +70,7 @@ def rma(x, n):
         a[i] = (a[i - 1] * (n - 1) + x[i]) / n
     return a
 
+# Adds a rsi column with given window to the passed dataframe
 def calc_rsi_sma(ticker_data: pd.DataFrame, window: int=14):
     rsi_column = f'rsi_{window}'
     ticker_data[rsi_column] = 100 - (100 / (
@@ -77,35 +79,11 @@ def calc_rsi_sma(ticker_data: pd.DataFrame, window: int=14):
                 ticker_data['Close'].diff(1).mask(ticker_data['Close']
                 .diff(1) > 0, -0.0).abs().ewm(alpha=1 / window, adjust=False).mean()))
 
-# Returns a features dataframe that contains the RSI (feature) and date as the index
-def calc_rsi_x(ticker_data: pd.DataFrame, window: int = 14) -> None:
-    if "Close" not in ticker_data:
-        raise ValueError("No close data in the provided DataFrame in StatsCalc.calc_rsi_sma()")
-
-    df = pd.DataFrame()
-    df['Change'] = pd.DataFrame(ticker_data['Close'].diff())
-    df['Gain'] = df.Change.mask(df.Change < 0, 0.0)
-    df['Loss'] = -df.Change.mask(df.Change > 0, -0.0)
-
-    df['avg_gain'] = rma(df.Gain.to_numpy(), window)
-    df['avg_loss'] = rma(df.Loss.to_numpy(), window)
-
-    df['rs'] = df.avg_gain / df.avg_loss
-    df['RSI'] = 100 - (100 / (1 + df['rs']))
-    feature_df = pd.DataFrame(index=ticker_data.index.copy())
-    feature_df['RSI'] = df['RSI'].copy()
-    feature_df['Close'] = ticker_data['Close'].copy()
-
-    rsi_column = f'rsi_{window}'
-    ticker_data[rsi_column] = feature_df['RSI'].copy()
-    # return feature_df
-
-
-# Returns a dataframe with the SMA
+# Adds sma with given window to the passed dataframe
 def calc_sma(ticker_data: pd.DataFrame, window: int) -> None:
     ticker_data['SMA'] = ticker_data['Close'].rolling(window=window).sum() / window
 
-
+# Adds ema column to the passed dataframe with the given window
 def calc_ema(ticker_data: pd.DataFrame, window: int) -> None:
     ema_column = f'EMA_{window}'
     smoothing = 2
