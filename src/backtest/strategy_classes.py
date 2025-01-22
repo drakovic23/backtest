@@ -40,7 +40,7 @@ class IStrategy(ABC):
 
 
 class RsiStrategy(IStrategy):
-    def __init__(self, oversold_threshold: float = 30, overbought_threshold: float = 70, rsi_window: int = 20, atr_window: int=20):
+    def __init__(self, oversold_threshold: float = 30, overbought_threshold: float = 70, rsi_window: int = 20, atr_window: int=0):
         self.buy_threshold = oversold_threshold
         self.sell_threshold = overbought_threshold
         config = StrategyConfig(

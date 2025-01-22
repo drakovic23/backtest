@@ -39,7 +39,7 @@ class BackTester:
         df['Signal'] = None
         df['RealizedPnL'] = 0.0
         df['UnrealizedPnL'] = 0.0
-        df['TotalPnL'] = 0.0
+        df['TotalRealPnL'] = 0.0
         df['CurrentCapital'] = 0.00
         df['Position'] = 0  # Track current position size (negative for shorts)
         df['EntryPrice'] = 0.0  # Track entry price for unrealized PnL calculation
@@ -150,7 +150,10 @@ class BackTester:
                 unrealized_pnl = 0.0
 
             df.at[features_data.index[i], 'UnrealizedPnL'] = unrealized_pnl
-            df.at[features_data.index[i], 'TotalPnL'] = df.at[features_data.index[i], 'RealizedPnL'] + unrealized_pnl
+            df.at[features_data.index[i], 'TotalRealPnL'] = df.at[features_data.index[i], 'RealizedPnL']
+            if i > 0:
+                # Add the previous TotalPnL to current TotalPnL so we have a rolling total
+                df.at[features_data.index[i], 'TotalRealPnL'] += df.at[features_data.index[i-1], 'TotalRealPnL']
             df.at[features_data.index[i], 'CurrentCapital'] = current_capital + unrealized_pnl
         # TODO: Remember to remove this
         df = pd.merge(df, features_data, left_index=True, right_index=True)
