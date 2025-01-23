@@ -30,7 +30,6 @@ class BackTester:
         position_type = 0  # -1 for short/sell, 0 for flat, 1 for buy
         entry_price = 0.0
 
-        features_data.dropna(inplace=True)
         df = pd.DataFrame(index=features.index.copy())
         df['Signal'] = None
         df['RealizedPnL'] = 0.0

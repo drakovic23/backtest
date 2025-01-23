@@ -17,9 +17,9 @@ def get_ohlc_data(ticker: str, interval="1d") -> pd.DataFrame:
     ticker_data.dropna(inplace=True)
     return ticker_data
 
-def get_sp500_basket() -> list:
-    url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-    tables = pd.read_html(url)
-    sp500_table = tables[0]
-    sp500_symbols = sp500_table['Symbol'].tolist()
-    return sp500_symbols
+#def get_sp500_basket() -> list:
+#    url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+#    tables = pd.read_html(url)
+#    sp500_table = tables[0]
+#    sp500_symbols = sp500_table['Symbol'].tolist()
+#    return sp500_symbols
