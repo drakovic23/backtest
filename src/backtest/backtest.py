@@ -22,7 +22,6 @@ class BackTester:
         if "ATR" in features.columns:
             use_atr = True
         print("Running backtest with: ", strategy.name(), " Using ATR: ", use_atr)
-        # Implementation of backtest logic
         features_data = features.copy()
         starting_capital = 10000.00
         current_capital = starting_capital
@@ -40,8 +39,8 @@ class BackTester:
         df['EntryPrice'] = 0.0  # Track entry price for unrealized PnL calculation
         df['ClosingPrice'] = features['Close']
 
+            # Used if ATR is passed to see if we are stopped out
         def check_stop_loss(current_price: float, current_atr: float) -> bool:
-            """Check if current price has hit our ATR-based stop loss"""
             if pd.isna(current_atr) or position_type == 0:
                 return False
 
@@ -154,7 +153,7 @@ class BackTester:
                 break
 
         # Final mark to market step
-        last_idx = features_data.index[-1]
+        last_index = features_data.index[-1]
         unrealized_pnl = 0.0
         if position_type != 0:
             current_price = features_data['Close'].iloc[-1]
@@ -163,11 +162,9 @@ class BackTester:
             elif position_type == -1:
                 unrealized_pnl = (entry_price - current_price) * position_size
 
-        df.at[last_idx, 'UnrealizedPnL'] = unrealized_pnl
-        df.at[last_idx, 'TotalRealPnL'] = df['TotalRealPnL'].iloc[-2]  # carry forward the previous total real PnL
-        df.at[last_idx, 'CurrentCapital'] = current_capital + unrealized_pnl
-        # TODO: Remember to remove this
-        df = pd.merge(df, features_data, left_index=True, right_index=True)
+        df.at[last_index, 'UnrealizedPnL'] = unrealized_pnl
+        df.at[last_index, 'TotalRealPnL'] = df['TotalRealPnL'].iloc[-2]  # carry forward the previous total real PnL
+        df.at[last_index, 'CurrentCapital'] = current_capital + unrealized_pnl
         return df
 
     def load_data(self, symbol: str, interval: str) -> "BackTester":
